@@ -9,12 +9,26 @@ def calcula_distancia(matriz_distancia, inicio, destino):
 # utilidade
 # quando menor melhor
 def fitness(individuo):
+    total_score = 0
     score = 0
+    van_score = []
+    j = 0
     for caminho_van in individuo:
         for i in range(len(caminho_van) - 1):
             score += calcula_distancia(data["matriz_distancia"], caminho_van[i], caminho_van[i+1])
-    print(f'Score:{score} Van: {individuo}')
-    return score
+        print(f'Score:{score} Individuo: {individuo}')
+        total_score += score
+        van_score.append(f'{score}{j}')
+        score = 0
+        j += 1
+    van_score.sort()
+    melhores_vans = []
+
+    for vans in van_score:
+        ultimo = vans[-1]
+        melhores_vans.append(individuo[int(vans[-1])])
+    individuo = melhores_vans
+    return total_score
 
 def mutacao(populacao):
     qtd = math.ceil(tx_mutacao * len(populacao))
@@ -64,6 +78,31 @@ def mutacao_swap(individuo):
     
     return novo_individuo
 
+def limpar(individuo, troca, antigo,index):
+    troca.pop(0)
+    troca.pop(-1)
+    tirar = []
+    nao_entre = 0
+    for el in individuo:
+        if(nao_entre !=index):
+            for i in el:
+                for j in troca:
+                    if(i == j):
+                       el.remove(i)
+        nao_entre += 1
+    troca = list(set(troca.extend(antigo)))
+    troca.insert(0,0)
+    troca.append(0)
+
+def crossover(populacao):
+    for i in range(len(populacao)-1):
+        swap = populacao[i][1]
+        antigo = swap
+        populacao[i]= [populacao[i][0], populacao[i+1][2], populacao[i][2], populacao[i][3]]
+        limpar(populacao[i],  populacao[i+1][2], antigo,1)
+        antigo = populacao[i+1][2]
+        populacao[i+1] = [populacao[i+1][0] , populacao[i+1][1], swap, populacao[i+1][3]]
+        limpar(populacao[i+1],  swap, antigo,2)
 
 # hiperparâmetros
 tamanho_populacao = 3
@@ -88,3 +127,4 @@ for p in populacao:
 while geracao < geracoes_max:
     geracao += 1
     populacao_mutada = mutacao(populacao)
+    crossover(populacao)
