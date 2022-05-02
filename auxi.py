@@ -31,25 +31,25 @@ def gerar_individuo(data):
   escolha = []
   cidades_por_van = int(cidades/data['num_vehicles'])
   inserted = 0
-  tmp_a = []
+  temp_escolha = []
 
   while len(disponiveis) > 0:
     num = random.randint(0, len(disponiveis) -1)
     if inserted ==  cidades_por_van:
-      tmp_a.insert(0,0)
-      tmp_a.append(0)
-      escolha.append(tmp_a)
-      tmp_a = []
+      temp_escolha.insert(0,0)
+      temp_escolha.append(0)
+      escolha.append(temp_escolha)
+      temp_escolha = []
       inserted = 0
     else:
       inserted += 1
-      tmp_a.append(disponiveis[num])
+      temp_escolha.append(disponiveis[num])
       disponiveis.pop(num)
       if len(disponiveis) == 0:
         #cidade de partida 0
-        tmp_a.insert(0,0)
-        tmp_a.append(0)
-        escolha.append(tmp_a)
+        temp_escolha.insert(0,0)
+        temp_escolha.append(0)
+        escolha.append(temp_escolha)
 
   return escolha
 
