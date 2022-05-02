@@ -1,6 +1,5 @@
 from difflib import Match
 from auxi import *
-import copy
 import math
 
 def calcula_distancia(matriz_distancia, inicio, destino):
@@ -58,7 +57,7 @@ def mutacao_flip(individuo):
     return novo_individuo
 
 def mutacao_swap(individuo):
-    novo_individuo = copy.deepcopy(individuo)
+    novo_individuo = individuo.copy()
     caminhos_van: list = []
     for van in novo_individuo:
         tamanho_caminho = len(van) - 1 
@@ -127,4 +126,4 @@ for p in populacao:
 while geracao < geracoes_max:
     geracao += 1
     populacao_mutada = mutacao(populacao)
-    crossover(populacao)
+    populacao_crossover = crossover(populacao)
