@@ -1,6 +1,7 @@
 from difflib import Match
 from auxi import *
 import math
+import numpy as np
 
 def calcula_distancia(matriz_distancia, inicio, destino):
     return matriz_distancia[inicio][destino]
@@ -89,8 +90,7 @@ def limpar(individuo, troca, antigo,index):
                     if(i == j):
                        el.remove(i)
         nao_entre += 1
-    troca = list(set(troca.extend(antigo)))
-    troca.insert(0,0)
+    troca = list(set(np.append(troca, antigo)))
     troca.append(0)
 
 def crossover(populacao):
