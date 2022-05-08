@@ -2,9 +2,10 @@ from auxi import *
 import math
 import numpy as np
 import copy
+import random
 
 def calcula_distancia(matriz_distancia, inicio, destino):
-    return matriz_distancia[inicio][destino]
+    return matriz_distancia[int(inicio)][int(destino)]
 
 # utilidade
 # quando menor melhor
@@ -35,13 +36,31 @@ def mutacao(populacao):
     populacao_mutacao = []
     
     for individuo in populacao_escolhida:
-        mutacao = str(random.choices(["shuffle", "swap"])[0])
-        if mutacao == "shuffle":
+        mutacao = random.randint(0,1)
+        if mutacao == 0:
             populacao_mutacao.append(mutacao_shuffle(individuo))
-        else: 
-            populacao_mutacao.append(mutacao_shuffle(individuo))
-
+        else:
+            populacao_mutacao.append(mutacao_swap(individuo))
     return populacao_mutacao
+
+
+def mutacao_swap(individuo):
+    individuo_copy = copy.deepcopy(individuo)
+    rand_van1 = random.randint(0,3)
+    rand_van2 = random.randint(0,3)
+    while rand_van2 == rand_van1:
+        rand_van2 = random.randint(0,3) 
+
+    rand_index = random.randint(1,4)
+
+    van1 = individuo_copy[rand_van1][rand_index]
+    van2 = individuo_copy[rand_van2][rand_index]
+
+    individuo_copy[rand_van1][rand_index] = van2
+    individuo_copy[rand_van2][rand_index] = van1
+    return individuo_copy
+
+
 
 # pega as cidades e embaralha elas
 def mutacao_shuffle(individuo):
@@ -62,26 +81,6 @@ def mutacao_shuffle(individuo):
         novo_individuo.append(ca)
     return novo_individuo
 
-# def mutacao_swap(individuo):
-#     novo_individuo = copy.deepcopy(individuo)
-#     caminhos_van = []
-#     for van in novo_individuo:
-#         tamanho_caminho = len(van) - 1 
-#         if tamanho_caminho > 1:
-#             caminho = list(range(1, tamanho_caminho))
-#             caminhos_van.append(caminho)
-#         else:
-#             caminhos_van.append([1])
-
-#     for index in range(len(novo_individuo)):
-#         indice_van1 = index
-#         indice_van2 = index - 1
-        
-#         indiceCaminho1 = random.choice(caminhos_van[indice_van1])
-#         indiceCaminho2 = random.choice(caminhos_van[indice_van2])
-#         novo_individuo[indice_van1][indiceCaminho1], novo_individuo[indice_van2][indiceCaminho2] = novo_individuo[indice_van2][indiceCaminho2], novo_individuo[indice_van1][indiceCaminho1] 
-    
-#     return novo_individuo
 
 def limpar(individuo, troca, antigo,index):
     troca.pop(0)
@@ -89,17 +88,20 @@ def limpar(individuo, troca, antigo,index):
     nao_entre = 0
     antigo_copia = copy.deepcopy(antigo)
     antigo_copia.insert(0,0)
-    for el in individuo:
-        if(nao_entre !=index):
-            for i in el:
-                for j in troca:
-                    if(i == j):
-                        individuo[nao_entre].remove(i)
-        nao_entre += 1
+    len_troca = len(troca)
+    print(troca)
+    for el in range(len_troca):
+        nao_entre = 0
+        for i in range(len(individuo)):
+            if(nao_entre !=index):
+                for j in range(len(individuo[i])-1):
+                    if(individuo[i][j] == troca[el]):
+                        individuo[nao_entre].remove(individuo[i][j])
+            nao_entre += 1
     troca = list(set(np.append(troca, antigo_copia)))
     troca.append(0)
     individuo[index] = troca
-    return individuo
+    return individuo 
 
 def crossover(populacao):
     funcao_decaimento_crossover = math.exp(-geracao / 200)
@@ -109,7 +111,7 @@ def crossover(populacao):
     for i in range(len(populacao_escolhida)-1):
         swap = populacao_escolhida[i][1]
         antigo = swap
-        populacao_escolhida[i]= [populacao_escolhida[i][0], populacao_escolhida[i+1][2], populacao_escolhida[i][2], populacao_escolhida[i][3]]
+        populacao_escolhida[i] = [populacao_escolhida[i][0], populacao_escolhida[i+1][2], populacao_escolhida[i][2], populacao_escolhida[i][3]]
         populacao_escolhida[i] = limpar(populacao_escolhida[i],  populacao_escolhida[i+1][2], antigo,1)
         antigo = populacao_escolhida[i+1][2]
         populacao_escolhida[i+1] = [populacao_escolhida[i+1][0] , populacao_escolhida[i+1][1], swap, populacao_escolhida[i+1][3]]
@@ -131,7 +133,7 @@ tamanho_populacao = 100
 tx_mutacao = 0.6
 tx_crossover = 0.4
 tx_tragedia = 0.2
-geracoes_max = 10
+geracoes_max = 100
 geracoes_tragedia = 100
 geracao = 0
 
@@ -143,6 +145,7 @@ while geracao < geracoes_max:
     geracao += 1
     populacao_mutada = mutacao(populacao)
     # populacao_crossover = crossover(populacao)
+    # populacao = selecao_tragedia(populacao_mutada + populacao_crossover + populacao,geracao)
     populacao = selecao_tragedia(populacao_mutada + populacao,geracao)
     if geracao % 100 == 0 or (geracao % 10 == 0 and geracao < 100):
         print("---------------- Geração: " + str(geracao) + " ----------------")
