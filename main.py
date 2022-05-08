@@ -2,10 +2,47 @@ from auxi import *
 import math
 import numpy as np
 import copy
-import random
+import random as rd
+
+valores_menor = []
+valores_maior = []
 
 def calcula_distancia(matriz_distancia, inicio, destino):
     return matriz_distancia[int(inicio)][int(destino)]
+
+def distribuicao_rotas(index_menor,index_maior, indi):
+    if not index_menor or not index_maior:
+        return
+    
+    indicemenor = rd.choice(index_menor)
+    index_menor.remove(indicemenor)
+
+    if len(index_maior) == 1:
+        indicemaior = rd.choice(index_maior)
+    else:
+        indicemaior = rd.choice(index_maior)
+        index_maior.remove(indicemaior)
+        
+    while len(indi[indicemaior]) == 4:
+        indicemaior = rd.choice(index_maior)
+        index_maior.remove(indicemaior)
+
+    while len(indi[indicemenor]) < 4:
+        
+        nMaior = rd.choice(indi[indicemaior])
+        indi[indicemaior].remove(nMaior)
+
+        indi[indicemenor].append(nMaior)
+
+def microsMacros(lista):
+    for i,val in enumerate(lista):
+        tiraZeroLista(val)
+        if len(val) < 4:
+            valores_menor.append(i)
+        elif len(val) == 4:
+            continue
+        else:
+            valores_maior.append(i)
 
 # utilidade
 # quando menor melhor
@@ -36,31 +73,13 @@ def mutacao(populacao):
     populacao_mutacao = []
     
     for individuo in populacao_escolhida:
-        mutacao = random.randint(0,1)
-        if mutacao == 0:
+        mutacao = str(random.choices(["shuffle", "swap"])[0])
+        if mutacao == "shuffle":
             populacao_mutacao.append(mutacao_shuffle(individuo))
-        else:
-            populacao_mutacao.append(mutacao_swap(individuo))
+        else: 
+            populacao_mutacao.append(mutacao_shuffle(individuo))
+
     return populacao_mutacao
-
-
-def mutacao_swap(individuo):
-    individuo_copy = copy.deepcopy(individuo)
-    rand_van1 = random.randint(0,3)
-    rand_van2 = random.randint(0,3)
-    while rand_van2 == rand_van1:
-        rand_van2 = random.randint(0,3) 
-
-    rand_index = random.randint(1,4)
-
-    van1 = individuo_copy[rand_van1][rand_index]
-    van2 = individuo_copy[rand_van2][rand_index]
-
-    individuo_copy[rand_van1][rand_index] = van2
-    individuo_copy[rand_van2][rand_index] = van1
-    return individuo_copy
-
-
 
 # pega as cidades e embaralha elas
 def mutacao_shuffle(individuo):
@@ -81,41 +100,82 @@ def mutacao_shuffle(individuo):
         novo_individuo.append(ca)
     return novo_individuo
 
+def tiraZeroMatriz(individuo):
+    for lista in individuo:
+        if lista[0] == 0:
+            lista.pop(0)
+        if lista[-1] == 0:
+            lista.pop(-1)
+      
+def tiraZeroLista(lista):
+    if not lista:
+        return
+    if lista[0] == 0:
+        lista.pop(0)
+    if lista[-1] == 0:
+        lista.pop(-1)
+  
+def colocaZero(individuo):
+  for lista in individuo:
+    if lista[0] != 0:
+      lista.insert(0,0)
+    if lista[-1] != 0:
+      lista.append(0)
+  return individuo
+
+
+def comparador(lista, numero):
+    return True if numero in lista else False
 
 def limpar(individuo, troca, antigo,index):
-    troca.pop(0)
-    troca.pop(-1)
+    tiraZeroLista(troca)
     nao_entre = 0
     antigo_copia = copy.deepcopy(antigo)
     antigo_copia.insert(0,0)
-    len_troca = len(troca)
-    print(troca)
-    for el in range(len_troca):
-        nao_entre = 0
-        for i in range(len(individuo)):
-            if(nao_entre !=index):
-                for j in range(len(individuo[i])-1):
-                    if(individuo[i][j] == troca[el]):
-                        individuo[nao_entre].remove(individuo[i][j])
-            nao_entre += 1
     troca = list(set(np.append(troca, antigo_copia)))
-    troca.append(0)
     individuo[index] = troca
-    return individuo 
+
+    novo_individuo = []
+    novo_el = []
+    
+    for el in individuo:
+        if(nao_entre !=index):
+            for i in el:
+                if not comparador(troca, i):
+                    novo_el.append(i)
+            contexto = copy.deepcopy(novo_el)
+            novo_individuo.append(contexto)
+            novo_el.clear()
+            
+        nao_entre += 1
+        
+    novo_individuo.insert(index, troca)
+    troca.append(0)
+    individuo = novo_individuo
+    return individuo
 
 def crossover(populacao):
     funcao_decaimento_crossover = math.exp(-geracao / 200)
     qtd = funcao_decaimento_crossover * tx_crossover * len(populacao)
     populacao_escolhida = copy.deepcopy(populacao)
     populacao_escolhida = random.choices(populacao_escolhida, k=math.ceil(qtd))
+    ## processo de retirar duplicações de rota
     for i in range(len(populacao_escolhida)-1):
         swap = populacao_escolhida[i][1]
         antigo = swap
-        populacao_escolhida[i] = [populacao_escolhida[i][0], populacao_escolhida[i+1][2], populacao_escolhida[i][2], populacao_escolhida[i][3]]
+        populacao_escolhida[i]= [populacao_escolhida[i][0], populacao_escolhida[i+1][2], populacao_escolhida[i][2], populacao_escolhida[i][3]]
         populacao_escolhida[i] = limpar(populacao_escolhida[i],  populacao_escolhida[i+1][2], antigo,1)
         antigo = populacao_escolhida[i+1][2]
         populacao_escolhida[i+1] = [populacao_escolhida[i+1][0] , populacao_escolhida[i+1][1], swap, populacao_escolhida[i+1][3]]
         populacao_escolhida[i+1] = limpar(populacao_escolhida[i+1],  swap, antigo,2)
+
+    #redistribuição de rotas no indivíduo
+    for individuo in populacao_escolhida:
+        microsMacros(individuo)
+        distribuicao_rotas(valores_menor, valores_maior, individuo)
+        valores_menor.clear()
+        valores_maior.clear()
+        
     return populacao_escolhida
 
 def selecao_tragedia(populacao, geracao):
@@ -133,7 +193,7 @@ tamanho_populacao = 100
 tx_mutacao = 0.6
 tx_crossover = 0.4
 tx_tragedia = 0.2
-geracoes_max = 100
+geracoes_max = 1000
 geracoes_tragedia = 100
 geracao = 0
 
@@ -144,15 +204,14 @@ populacao = sorted(populacao, key=fitness)
 while geracao < geracoes_max:
     geracao += 1
     populacao_mutada = mutacao(populacao)
-    # populacao_crossover = crossover(populacao)
-    # populacao = selecao_tragedia(populacao_mutada + populacao_crossover + populacao,geracao)
-    populacao = selecao_tragedia(populacao_mutada + populacao,geracao)
+    populacao_crossover = crossover(populacao)
+    populacao = selecao_tragedia(populacao_mutada + populacao_crossover + populacao,geracao)
+    # populacao = selecao_tragedia(populacao_mutada + populacao,geracao)
     if geracao % 100 == 0 or (geracao % 10 == 0 and geracao < 100):
         print("---------------- Geração: " + str(geracao) + " ----------------")
         print(populacao[0])
         print("Distância percorrida com todas as vans: " + str(fitness(populacao[0])))
 
-# output desejável
 melhor_individuo = populacao[0]
 for index, caminho_van in enumerate(melhor_individuo):
     print(f'Van {index + 1}')
