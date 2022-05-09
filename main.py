@@ -10,36 +10,48 @@ valores_maior = []
 def calcula_distancia(matriz_distancia, inicio, destino):
     return matriz_distancia[int(inicio)][int(destino)]
 
+def check_len(individuo):
+    for rota in individuo:
+        if len(rota) < 4:
+            return False
+    return True
 def distribuicao_rotas(index_menor,index_maior, indi):
+    microsMacros(indi)
     if not index_menor or not index_maior:
         return
-    
-    indicemenor = rd.choice(index_menor)
-    index_menor.remove(indicemenor)
+    while not check_len(indi):
+        valores_menor.clear()
+        valores_maior.clear()
+        microsMacros(indi)
+        if len(index_menor) == 1:
+            indicemenor = rd.choice(index_menor)
+        else:
+            indicemenor = rd.choice(index_menor)
+            index_menor.remove(indicemenor)
 
-    if len(index_maior) == 1:
-        indicemaior = rd.choice(index_maior)
-    else:
-        indicemaior = rd.choice(index_maior)
-        index_maior.remove(indicemaior)
-        
-    while len(indi[indicemaior]) == 4:
-        indicemaior = rd.choice(index_maior)
-        index_maior.remove(indicemaior)
+        if len(index_maior) == 1:
+            indicemaior = rd.choice(index_maior)
+        else:
+            indicemaior = rd.choice(index_maior)
+            index_maior.remove(indicemaior)
+            
+        while len(indi[indicemaior]) == 4:
+            indicemaior = rd.choice(index_maior)
+            index_maior.remove(indicemaior)
 
-    while len(indi[indicemenor]) < 4:
-        
-        nMaior = rd.choice(indi[indicemaior])
-        indi[indicemaior].remove(nMaior)
+        while len(indi[indicemenor]) < 4 and len(indi[indicemaior]) > 4:
+            
+            nMaior = rd.choice(indi[indicemaior])
+            indi[indicemaior].remove(nMaior)
 
-        indi[indicemenor].append(nMaior)
+            indi[indicemenor].append(nMaior)
 
 def microsMacros(lista):
     for i,val in enumerate(lista):
         tiraZeroLista(val)
-        if len(val) < 4:
+        if len(val) < 4 and not i in valores_menor:
             valores_menor.append(i)
-        elif len(val) == 4:
+        elif len(val) == 4 and not i in valores_maior:
             continue
         else:
             valores_maior.append(i)
@@ -73,13 +85,29 @@ def mutacao(populacao):
     populacao_mutacao = []
     
     for individuo in populacao_escolhida:
-        mutacao = str(random.choices(["shuffle", "swap"])[0])
-        if mutacao == "shuffle":
+        mutacao = random.randint(0,1)
+        if mutacao == 0:
             populacao_mutacao.append(mutacao_shuffle(individuo))
-        else: 
-            populacao_mutacao.append(mutacao_shuffle(individuo))
+        else:
+            populacao_mutacao.append(mutacao_swap(individuo))
 
     return populacao_mutacao
+
+def mutacao_swap(individuo):
+    individuo_copy = copy.deepcopy(individuo)
+    rand_van1 = random.randint(0,3)
+    rand_van2 = random.randint(0,3)
+    while rand_van2 == rand_van1:
+        rand_van2 = random.randint(0,3) 
+
+    rand_index = random.randint(1,4)
+
+    van1 = individuo_copy[rand_van1][rand_index]
+    van2 = individuo_copy[rand_van2][rand_index]
+
+    individuo_copy[rand_van1][rand_index] = van2
+    individuo_copy[rand_van2][rand_index] = van1
+    return individuo_copy
 
 # pega as cidades e embaralha elas
 def mutacao_shuffle(individuo):
@@ -121,7 +149,6 @@ def colocaZero(individuo):
       lista.insert(0,0)
     if lista[-1] != 0:
       lista.append(0)
-  return individuo
 
 
 def comparador(lista, numero):
@@ -171,10 +198,8 @@ def crossover(populacao):
 
     #redistribuição de rotas no indivíduo
     for individuo in populacao_escolhida:
-        microsMacros(individuo)
         distribuicao_rotas(valores_menor, valores_maior, individuo)
-        valores_menor.clear()
-        valores_maior.clear()
+        colocaZero(individuo)
         
     return populacao_escolhida
 
@@ -189,10 +214,10 @@ def selecao_tragedia(populacao, geracao):
         return nova_populacao[0:tamanho_populacao]
 
 # hiperparâmetros
-tamanho_populacao = 100
+tamanho_populacao = 1000
 tx_mutacao = 0.6
-tx_crossover = 0.4
-tx_tragedia = 0.2
+tx_crossover = 0.7
+tx_tragedia = 0.5
 geracoes_max = 1000
 geracoes_tragedia = 100
 geracao = 0
@@ -215,8 +240,8 @@ while geracao < geracoes_max:
 melhor_individuo = populacao[0]
 for index, caminho_van in enumerate(melhor_individuo):
     print(f'Van {index + 1}')
-    caminho_sem_deposito = [str(numero) for numero in caminho_van]
-    caminho_sem_deposito = caminho_sem_deposito[1:len(caminho_sem_deposito)-1]
-    print(' -> '.join(caminho_sem_deposito),end='\n\n')
+    caminhoSemZeros = [str(numero) for numero in caminho_van]
+    caminhoSemZeros = caminhoSemZeros[1:len(caminhoSemZeros)-1]
+    print(' -> '.join(caminhoSemZeros),end='\n\n')
 
 print("Distância percorrida com todas as vans: " + str(fitness(populacao[0])))
